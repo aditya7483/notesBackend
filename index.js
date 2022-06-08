@@ -14,13 +14,13 @@ app.get('/api/notes',async (req,res)=>{
     res.json(data);
 })
 
-app.post("/api/createNote", (req, res) => {
-    let newNote = Note(req.body);
-    newNote.save((err,data)=>{
-        if(err) res.send(err);
-
-        else res.send(data);
-    });
+app.post("/api/createNote", async(req, res) => {
+    let result = await Note.insertMany(req.body);
+    if(result===[])
+    {
+        res.send("An error Occured");
+    }
+    res.json(result);
 });
 
 app.put('/api/update/:id',async (req,res)=>{
