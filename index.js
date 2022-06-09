@@ -15,22 +15,33 @@ app.get('/api/notes',async (req,res)=>{
 })
 
 app.post("/api/createNote", async(req, res) => {
-    let result = await Note.insertMany(req.body);
+    try{let result = await Note.insertMany(req.body);
     if(result===[])
     {
         res.send("An error Occured");
     }
     res.json(result);
+    }catch(err){
+        res.send("Internal Server Error")
+    }
 });
 
 app.put('/api/update/:id',async (req,res)=>{
-    let note = await Note.findById(req.params.id);
-    if(!note){
-        res.status(404).send("not found");
+    try {
+        let note = await Note.findByIdAndUpdate(req.params.id,{$set: req.body},{new:true});
+        res.json(note);
+    } catch (error) {
+        res.status(404).send("Internal Server Error")
     }
+})
 
-    note = await Note.findByIdAndUpdate(req.params.id,{$set: req.body},{new:true});
-    res.json(note);
+app.delete('/api/deleteNote/:id',async (req,res)=>{  
+    try {
+        let note = await Note.deleteOne({_id:req.params.id});
+        res.json(note);
+    } catch (error) {
+        res.status(404).send("Internal Server Error")
+    }
 })
 
   
