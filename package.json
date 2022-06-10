@@ -23,5 +23,8 @@
     "url": "https://github.com/aditya7483/notesBackend/issues"
   },
   "homepage": "https://github.com/aditya7483/notesBackend#readme",
-  "description": ""
+  "description": "",
+  "engines": {
+    "node": "16.15.1"
+  }
 }
