@@ -2,12 +2,13 @@
 const express = require('express');
 const app= express();
 const port= process.env.PORT || 3001;
-const connectToMongo = require('./modules/mongoose');
-const Note = require('./schemas/note');
+const connectToMongo = require('./database/mongoose');
+const Note = require('./database/schemas/note');
 
 connectToMongo();
 
 app.use(express.json());
+app.use('/api/auth',require('./routes/auth'))
 
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', "*");
@@ -16,7 +17,7 @@ var allowCrossDomain = function(req, res, next) {
     next();
 }
 
-    app.use(allowCrossDomain);
+app.use(allowCrossDomain);
     
 
 app.get('/api/notes',async (req,res)=>{
