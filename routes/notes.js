@@ -2,6 +2,16 @@ const express = require('express');
 const router = express.Router();
 const Note = require('../database/schemas/note');
 
+
+var allowCrossDomain = function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', "*");
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+}
+
+app.use(allowCrossDomain);
+
 router.get('/getnotes',async (req,res)=>{
     let data= await Note.find();
     res.json(data);
