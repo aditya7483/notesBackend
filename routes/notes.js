@@ -10,7 +10,7 @@ var allowCrossDomain = function(req, res, next) {
     next();
 }
 
-app.use(allowCrossDomain);
+router.use(allowCrossDomain);
 
 router.get('/getnotes',async (req,res)=>{
     let data= await Note.find();
