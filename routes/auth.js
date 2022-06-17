@@ -10,7 +10,7 @@ const token = process.env.JSON_SECRET
 
 //endpoint to register a new user. username,password and email are given in the body of the request
 router.post('/signup', [
-    body('username', 'Name is too short').isLength({ min: 3 }),
+    body('username', 'Name is too short').isLength({ min: 4 }),
     body('email', 'Please enter a valid email').isEmail(),
     body('password', 'Password is too short').isLength({ min: 5 })
 ], async (req, res) => {
