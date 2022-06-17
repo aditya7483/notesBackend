@@ -5,21 +5,10 @@ const User = require('../database/schemas/user');
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 var jwt = require('jsonwebtoken');
+const authorize = require('../middleware/authorize')
 const token = process.env.JSON_SECRET
 
-var allowCrossDomain = function(req, res, next) {
-    res.header('Access-Control-Allow-Origin', "*");
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
-    next();
-}
-
-router.use(allowCrossDomain);
-
-router.get('/', async (req, res) => {
-    res.send('auth get/')
-})
-
+//endpoint to register a new user. username,password and email are given in the body of the request
 router.post('/signup', [
     body('username', 'Name is too short').isLength({ min: 3 }),
     body('email', 'Please enter a valid email').isEmail(),
@@ -46,7 +35,7 @@ router.post('/signup', [
 
 })
 
-
+//endpoint to register a new user. username and password are given in the body of the request
 router.post('/login', [
     body('username', 'Please enter a valid email').exists(),
     body('password', 'Password is too short').exists()
@@ -81,5 +70,53 @@ router.post('/login', [
         }
     }
 })
+
+
+//authorization required (auth-token needed as a parameter)
+//auth-token of the user whose data is to be fetched is given as the header
+router.post('/getuser', authorize, async (req, res) => {
+    try {
+        let userId = req.user.id
+        const result = await User.findById(userId).select('-password')
+        if (!result) {
+            res.status(404).send('user not found')
+        }
+        else res.json(result)
+    } catch (err) {
+        res.status(401).send('Internal Server Error')
+    }
+})
+
+//authorization required (auth-token needed as a parameter)
+//auth-token of the user whose password is to be changed is given as the header
+//the new password is given in the body of request
+router.put('/forgotpassword', authorize, async(req, res) => {
+    try {
+        let userId = req.user.id
+        const result = await User.findById(userId)
+
+        //find if the user with the given auth-token exists
+        if (!result) {
+            res.status(404).send('user not found')
+        }
+        else {
+            const salt = await bcrypt.genSalt(10);
+            const newPassword = await bcrypt.hash(req.body.password, salt);
+            let data = {
+                password:newPassword
+            }
+            let response = await User.findByIdAndUpdate(userId, { $set: data }, { new: true })
+            //check if the user exists
+            if(!response){
+                res.status(404).send('user not found')
+            }
+            else res.send('Password Changed Successfully')
+        }
+    } catch (err) {
+        res.status(401).send('Internal Server Error')
+    }
+
+})
+
 
 module.exports = router;
