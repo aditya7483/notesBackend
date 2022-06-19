@@ -8,6 +8,15 @@ var jwt = require('jsonwebtoken');
 const authorize = require('../middleware/authorize')
 const token = process.env.JSON_SECRET
 
+var allowCrossDomain = function (req, res, next) {
+    res.header('Access-Control-Allow-Origin', "*");
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+}
+
+router.use(allowCrossDomain);
+
 //endpoint to register a new user. username,password and email are given in the body of the request
 router.post('/signup', [
     body('username', 'Name is too short').isLength({ min: 4 }),
