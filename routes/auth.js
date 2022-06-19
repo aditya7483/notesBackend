@@ -24,22 +24,27 @@ router.post('/signup', [
     body('password', 'Password is too short').isLength({ min: 5 })
 ], async (req, res) => {
     const err = validationResult(req)
-    if (!err.isEmpty()) {
-        res.status(404).json(err);
-    }
-    else {
-        const salt = await bcrypt.genSalt(10);
-        const pass = await bcrypt.hash(req.body.password, salt);
-        User.create({
-            username: req.body.username,
-            email: req.body.email,
-            password: pass
-        }).then(response => {
-            res.json(response)
+    try {
+        if (!err.isEmpty()) {
+            res.status(404).json({err:err});
         }
-        ).catch(err => {
-            res.status(404).json({ err: 'user with this username or email already exists' });
-        })
+        else {
+            const salt = await bcrypt.genSalt(10);
+            const pass = await bcrypt.hash(req.body.password, salt);
+            User.create({
+                username: req.body.username,
+                email: req.body.email,
+                password: pass
+            }).then(response => {
+                res.json(response)
+            }
+            ).catch(err => {
+                res.status(404).json({ err: 'user with this username or email already exists' });
+            })
+        }
+    }
+    catch (err) {
+        res.status(501).send({ err: 'Internal Server Error' })
     }
 
 })
@@ -58,24 +63,30 @@ router.post('/login', [
         try {
             let user = await User.findOne({ username: username })
             if (!user) {
-                res.status(404).json("Invalid username or password")
+                res.status(404).json({ err: "Invalid username or password" })
             }
-            let passComp = await bcrypt.compare(password, user.password);
-            if (!passComp) {
-                res.status(404).json("Invalid username or password")
-            }
+
             else {
-                const data = {
-                    user: {
-                        id: user.id
-                    }
+                let passComp = await bcrypt.compare(password, user.password);
+                if (!user) {
+                    res.status(404).json({ err: "Invalid username or password" })
                 }
 
-                const authToken = jwt.sign(data, token)
-                res.json({ authToken });
+                else {
+                    const data = {
+                        user: {
+                            id: user.id
+                        }
+                    }
+
+                    const authToken = jwt.sign(data, token)
+                    res.json({ authToken });
+                }
             }
-        } catch (err) {
-            res.status(404).json("internal server error");
+        }
+        catch (err) {
+            res.status(404).json({ err: "internal server error" });
+            // res.status(404).json({ err: err});
         }
     }
 })
@@ -99,7 +110,7 @@ router.post('/getuser', authorize, async (req, res) => {
 //authorization required (auth-token needed as a parameter)
 //auth-token of the user whose password is to be changed is given as the header
 //the new password is given in the body of request
-router.put('/forgotpassword', authorize, async(req, res) => {
+router.put('/forgotpassword', authorize, async (req, res) => {
     try {
         let userId = req.user.id
         const result = await User.findById(userId)
@@ -112,11 +123,11 @@ router.put('/forgotpassword', authorize, async(req, res) => {
             const salt = await bcrypt.genSalt(10);
             const newPassword = await bcrypt.hash(req.body.password, salt);
             let data = {
-                password:newPassword
+                password: newPassword
             }
             let response = await User.findByIdAndUpdate(userId, { $set: data }, { new: true })
             //check if the user exists
-            if(!response){
+            if (!response) {
                 res.status(404).send('user not found')
             }
             else res.send('Password Changed Successfully')
