@@ -3,16 +3,9 @@ const router = express.Router();
 const Note = require('../database/schemas/note');
 const User = require('../database/schemas/user');
 const authorize = require('../middleware/authorize')
+var cors = require('cors')
 
-var allowCrossDomain = function (req, res, next) {
-    res.header('Access-Control-Allow-Origin', "*");
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
-    next();
-}
-
-router.use(allowCrossDomain);
-
+router.use(cors())
 
 //authorization required(auth-token needed as the header)
 //endpoint to get all the notes a particular user
@@ -27,7 +20,7 @@ router.get('/getNotes', authorize, async (req, res) => {
 
         //if the user exists send the details of the note
         else {
-            let data = await Note.find({ username: userInfo.username });
+            let data = await Note.find({ userId: req.user.id });
             res.json(data);
         }
     } catch (error) {
@@ -37,7 +30,7 @@ router.get('/getNotes', authorize, async (req, res) => {
 
 //authorization required(auth-token needed as the header)
 //endpoint to create notes for a particular user
-router.post("/createNote", authorize,async (req, res) => {
+router.post("/createNote", authorize, async (req, res) => {
     try {
         //check if the user exists
         let userInfo = await User.findById(req.user.id)
@@ -50,10 +43,10 @@ router.post("/createNote", authorize,async (req, res) => {
             let data = {
                 title: req.body.title,
                 description: req.body.description,
-                userId: userInfo._id
+                userId: req.user.id
             }
             let result = await Note.create(data);
-            if (result === []) {
+            if (result.length===0) {
                 res.send("An error Occured");
             }
             else res.json(result);
@@ -73,7 +66,7 @@ router.put('/updateNote/:id', authorize, async (req, res) => {
             res.status(404).send('user/note not found')
         }
 
-        else if (userInfo.username !== upnote.username) {
+        else if (req.user.id != upnote.userId) {
             res.status(401).send('This action is not permitted')
         }
         //if the user exists create the note and send the details of the note
@@ -96,7 +89,8 @@ router.delete('/deleteNote/:id', authorize, async (req, res) => {
             res.status(404).send('user/note not found')
         }
 
-        else if (userInfo.username !== upnote.username) {
+        else if (req.user.id != upnote.userId) {
+
             res.status(401).send('This action is not permitted')
         }
         else {

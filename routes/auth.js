@@ -1,6 +1,7 @@
 const express = require('express');
 require('dotenv').config();
 const router = express.Router();
+var cors = require('cors')
 const User = require('../database/schemas/user');
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
@@ -8,14 +9,7 @@ var jwt = require('jsonwebtoken');
 const authorize = require('../middleware/authorize')
 const token = process.env.JSON_SECRET
 
-var allowCrossDomain = function (req, res, next) {
-    res.header('Access-Control-Allow-Origin', "*");
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
-    next();
-}
-
-router.use(allowCrossDomain);
+router.use(cors())
 
 //endpoint to register a new user. username,password and email are given in the body of the request
 router.post('/signup', [
@@ -26,7 +20,7 @@ router.post('/signup', [
     const err = validationResult(req)
     try {
         if (!err.isEmpty()) {
-            res.status(404).json({err:err});
+            res.status(404).json({err:'Please use valid credentials to create account'});
         }
         else {
             const salt = await bcrypt.genSalt(10);
@@ -68,7 +62,7 @@ router.post('/login', [
 
             else {
                 let passComp = await bcrypt.compare(password, user.password);
-                if (!user) {
+                if (!passComp) {
                     res.status(404).json({ err: "Invalid username or password" })
                 }
 
