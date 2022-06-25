@@ -88,7 +88,7 @@ router.post('/login', [
 
 //authorization required (auth-token needed as a parameter)
 //auth-token of the user whose data is to be fetched is given as the header
-router.post('/getuser', authorize, async (req, res) => {
+router.get('/getuser', authorize, async (req, res) => {
     try {
         let userId = req.user.id
         const result = await User.findById(userId).select('-password')
