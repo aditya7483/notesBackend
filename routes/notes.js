@@ -45,11 +45,17 @@ router.post("/createNote", authorize, async (req, res) => {
         description: req.body.description,
         userId: req.user.id
       }
-      Note.create(data).then(result => {
-        res.json(result);
-      }).catch(err => {
+      let noteFind = await Note.find({ userId: req.user.id, title: req.body.title })
+      if (noteFind.length === 0) {
         res.status(404).json({ err: "Title must be unique" });
-      })
+      }
+      else {
+        Note.create(data).then(result => {
+          res.json(result);
+        }).catch(err => {
+          res.status(404).json({ err: "An error occurred" });
+        })
+      }
     }
   } catch (err) {
     res.status(404).send("Internal Server Error")
