@@ -46,7 +46,7 @@ router.post("/createNote", authorize, async (req, res) => {
         userId: req.user.id
       }
       let noteFind = await Note.find({ userId: req.user.id, title: req.body.title })
-      if (noteFind && noteFind.length !== 0) {
+      if (noteFind.length !== 0) {
         res.status(404).json({ err: "Title must be unique" });
       }
       else {
@@ -54,6 +54,7 @@ router.post("/createNote", authorize, async (req, res) => {
           res.json(result);
         }).catch(err => {
           res.status(404).json({ err: "An error occurred" });
+          // res.status(404).json({ err: err });
         })
       }
     }
@@ -77,11 +78,17 @@ router.put('/updateNote/:id', authorize, async (req, res) => {
     }
     //if the user exists create the note and send the details of the note
     else {
-      Note.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true }).then(result => {
-        res.json(result);
-      }).catch(err => {
+      let noteFind = await Note.find({ userId: req.user.id, title: req.body.title })
+      if (noteFind.length !== 0) {
         res.status(404).json({ err: "Title must be unique" });
-      })
+      }
+      else {
+        Note.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true }).then(result => {
+          res.json(result);
+        }).catch(err => {
+          res.status(404).json({ err: "An error occured" });
+        })
+      }
     }
   } catch (error) {
     res.status(404).send("Internal Server Error")
