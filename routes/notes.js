@@ -46,7 +46,7 @@ router.post("/createNote", authorize, async (req, res) => {
         userId: req.user.id
       }
       let noteFind = await Note.find({ userId: req.user.id, title: req.body.title })
-      if (noteFind.length !== 0) {
+      if (noteFind && noteFind.length !== 0) {
         res.status(404).json({ err: "Title must be unique" });
       }
       else {
